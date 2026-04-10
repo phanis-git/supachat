@@ -40,8 +40,7 @@ def get_connection():
         user="postgres",
         password="phani123supabase",
         port=5432,
-        sslmode="require",
-        
+        sslmode="require",   
     )
 # def get_connection():
 #     return psycopg2.connect(
