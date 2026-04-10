@@ -16,3 +16,4 @@ services:
       - "3000:80"
     environment:
     - HOST=0.0.0.0
+    
