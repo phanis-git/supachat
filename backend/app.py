@@ -86,7 +86,6 @@ import psycopg2
 
 app = FastAPI()
 
-
 Instrumentator().instrument(app).expose(app)
 # =========================
 # CORS CONFIG
