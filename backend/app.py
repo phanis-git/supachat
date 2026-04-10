@@ -47,7 +47,7 @@ def get_connection():
     return psycopg2.connect(
         host="aws-0-ap-south-1.pooler.supabase.com",  # ✅ pooler host (IPv4)
         database="postgres",
-        user="postgres.wxlpskafzqqxqazjtada",         # ✅ full username (IMPORTANT)
+        user="postgres",         # ✅ full username (IMPORTANT)
         password="phani123supabase",
         port=6543,                                   # ✅ pooler port
         sslmode="require",
