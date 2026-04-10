@@ -143,7 +143,7 @@ def get_connection():
         database="postgres",
         user="postgres.wxlpskafzqqxqazjtada",  # ✅ FIXED
         password="phani123supabase",
-        # port=6543,
+        port=6543,
         sslmode="require"
     )
 
