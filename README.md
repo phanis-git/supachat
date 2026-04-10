@@ -253,8 +253,7 @@ Response:
 # 🤖 AI Tools Used
 
 * ChatGPT (architecture, debugging)
-* GitHub Copilot (coding assistance)
-* Cursor / Claude (optional usage)
+* Cursor / Claude (optionally used)
 * AI used for:
 
   * SQL generation
