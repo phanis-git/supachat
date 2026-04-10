@@ -126,12 +126,14 @@ class Query(BaseModel):
 
 def get_connection():
     return psycopg2.connect(
-        host="db.wxlpskafzqqxqazjtada.supabase.co",
+        # host="db.wxlpskafzqqxqazjtada.supabase.co",
         database="postgres",
         user="postgres",
         password="phani123supabase",
-        port=5432,
-        sslmode="require"
+        # port=5432,
+        sslmode="require",
+        host="aws-0-ap-south-1.pooler.supabase.com",
+        port=6543
     )
 
 
