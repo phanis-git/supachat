@@ -42,6 +42,7 @@ def get_connection():
         port=5432,
         sslmode="require",   
     )
+
 # def get_connection():
 #     return psycopg2.connect(
 #         host="aws-0-ap-south-1.pooler.supabase.com",  # ✅ pooler host (IPv4)
