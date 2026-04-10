@@ -137,21 +137,21 @@ class Query(BaseModel):
         
 #     )
 
-# def get_connection():
-#     return psycopg2.connect(
-#         host="aws-0-ap-south-1.pooler.supabase.com",
-#         database="postgres",
-#         user="postgres.wxlpskafzqqxqazjtada",  # ✅ FIXED
-#         password="phani123supabase",
-#         port=6543,
-#         sslmode="require"
-#     )
-
 def get_connection():
     return psycopg2.connect(
-        "postgresql://postgres.wxlpskafzqqxqazjtada:phani123supabase@aws-0-ap-south-1.pooler.supabase.com:6543/postgres",
+        host="aws-0-ap-south-1.pooler.supabase.com",
+        database="postgres",
+        user="postgres.wxlpskafzqqxqazjtada",  # ✅ FIXED
+        password="phani123supabase",
+        port=6543,
         sslmode="require"
     )
+
+# def get_connection():
+#     return psycopg2.connect(
+#         "postgresql://postgres.wxlpskafzqqxqazjtada:phani123supabase@aws-0-ap-south-1.pooler.supabase.com:6543/postgres",
+#         sslmode="require"
+#     )
 
 # =========================
 # HEALTH CHECK
