@@ -80,13 +80,13 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from prometheus_fastapi_instrumentator import Instrumentator
+# from prometheus_fastapi_instrumentator import Instrumentator
 from pydantic import BaseModel
 import psycopg2
 
 app = FastAPI()
 
-Instrumentator().instrument(app).expose(app)
+# Instrumentator().instrument(app).expose(app)
 # =========================
 # CORS CONFIG
 # =========================
@@ -134,7 +134,7 @@ def get_connection():
         database="postgres",
         user="postgres",
         password="phani123supabase",
-        port=6543,
+        port=5432,
         sslmode="require",
         
     )
