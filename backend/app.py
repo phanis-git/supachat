@@ -31,26 +31,15 @@ class Query(BaseModel):
 # =========================
 
 
-# ✅ Fixed — print only after real connection succeeds
-# def get_connection():
-#     conn = psycopg2.connect(
-#         host="db.wxlpskafzqqxqazjtada.supabase.co",
-#         database="postgres",
-#         user="postgres",
-#         password="phani123supabase",
-#         port=5432,
-#         sslmode="require",   
-#     )
-#     print("✅ Connected successfully!")  # ✅ inside, only runs on real connection
-#     return conn
+
 
 def get_connection():
     conn = psycopg2.connect(
-        host="aws-0-ap-south-1.pooler.supabase.com",  # ✅ Supabase pooler (IPv4)
+        host="aws-1-ap-south-1.pooler.supabase.com",  # ✅ Supabase pooler (IPv4)
         database="postgres",
         user="postgres.wxlpskafzqqxqazjtada",          # ✅ your project ref
         password="phani123supabase",
-        port=6543,                                      # ✅ pooler port
+        port=5432,                                      # ✅ pooler port
         sslmode="require",
     )
     print("✅ Connected successfully!")
