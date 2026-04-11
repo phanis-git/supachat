@@ -4,7 +4,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from prometheus_fastapi_instrumentator import Instrumentator
 from pydantic import BaseModel
 import psycopg2
-
+import os
+from dotenv import load_dotenv
+load_dotenv() 
 app = FastAPI()
 
 Instrumentator().instrument(app).expose(app)
@@ -35,11 +37,11 @@ class Query(BaseModel):
 
 def get_connection():
     conn = psycopg2.connect(
-        host="aws-1-ap-south-1.pooler.supabase.com",  # ✅ Supabase pooler (IPv4)
-        database="postgres",
-        user="postgres.wxlpskafzqqxqazjtada",          # ✅ your project ref
-        password="phani123supabase",
-        port=5432,                                      # ✅ pooler port
+         host=os.getenv("DB_HOST"),
+        database=os.getenv("DB_NAME"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        port=int(os.getenv("DB_PORT", 5432)),
         sslmode="require",
     )
 
