@@ -13,7 +13,7 @@ function App() {
 
   const sendQuery = async () => {
     try {
-      const res = await axios.post("http://98.90.200.120:8000/query", {
+      const res = await axios.post("/api/query", {
         query: query
       });
       setData(res.data.data);

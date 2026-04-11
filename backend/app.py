@@ -31,10 +31,9 @@ class Query(BaseModel):
 # =========================
 
 
-# working 1
-
+# ✅ Fixed — print only after real connection succeeds
 def get_connection():
-    return psycopg2.connect(
+    conn = psycopg2.connect(
         host="db.wxlpskafzqqxqazjtada.supabase.co",
         database="postgres",
         user="postgres",
@@ -42,18 +41,8 @@ def get_connection():
         port=5432,
         sslmode="require",   
     )
-
-# def get_connection():
-#     return psycopg2.connect(
-#         host="aws-0-ap-south-1.pooler.supabase.com",  # ✅ pooler host (IPv4)
-#         database="postgres",
-#         user="postgres",         # ✅ full username (IMPORTANT)
-#         password="phani123supabase",
-#         port=6543,                                   # ✅ pooler port
-#         sslmode="require",
-#     )
-print("✅ Connected successfully!")
-
+    print("✅ Connected successfully!")  # ✅ inside, only runs on real connection
+    return conn
 
 
 # =========================
@@ -67,7 +56,7 @@ def health():
 # =========================
 # MAIN QUERY ENDPOINT
 # =========================
-@app.post("/query")
+@app.post("/api/query")
 def run_query(q: Query):
 
     try:
