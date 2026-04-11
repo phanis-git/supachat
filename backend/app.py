@@ -42,6 +42,7 @@ def get_connection():
         port=5432,                                      # ✅ pooler port
         sslmode="require",
     )
+    
     print("✅ Connected successfully!")
     return conn
 
