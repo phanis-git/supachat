@@ -1,13 +1,13 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-# from prometheus_fastapi_instrumentator import Instrumentator
+from prometheus_fastapi_instrumentator import Instrumentator
 from pydantic import BaseModel
 import psycopg2
 
 app = FastAPI()
 
-# Instrumentator().instrument(app).expose(app)
+Instrumentator().instrument(app).expose(app)
 # =========================
 # CORS CONFIG
 # =========================
@@ -42,7 +42,7 @@ def get_connection():
         port=5432,                                      # ✅ pooler port
         sslmode="require",
     )
-    
+
     print("✅ Connected successfully!")
     return conn
 
