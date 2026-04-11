@@ -16,7 +16,17 @@ function App() {
       const res = await axios.post("/api/query", {
         query: query
       });
+      // ✅ Check if response has error
+    if (res.data.error) {
+      alert("DB Error: " + res.data.error);
+      return;
+    }
+
+    if (res.data.data) {
       setData(res.data.data);
+    } else {
+      setData([]);
+    }
     } catch (err) {
       alert("Error fetching data");
     }
