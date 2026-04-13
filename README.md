@@ -3,13 +3,16 @@
 SupaChat is a full-stack conversational analytics application built on top of **Supabase PostgreSQL + MCP server**, enabling users to query data using natural language and visualize insights through tables and charts.
 
 This project demonstrates a complete **DevOps lifecycle**:
-**Build → Dockerize → Deploy → Reverse Proxy → CI/CD → Monitoring**
+**Build → Dockerize → Deploy → Reverse Proxy → CI/CD → Monitoring → DevOps Agent**
 
 ---
 
 # 📌 Live Demo
 
-🌐 Public URL: `http://98.90.200.120:3000`
+🌐 Public URL: `http://34.230.85.14`
+📊 Prometheus: `http://34.230.85.14:9090`
+📈 Grafana: `http://34.230.85.14:3002`
+🤖 DevOps Agent: `http://34.230.85.14:8001/docs`
 
 ---
 
@@ -43,6 +46,12 @@ Prometheus → Grafana
 * MCP Query Translator
 * Supabase PostgreSQL (via psycopg2)
 
+### DevOps Agent
+- FastAPI
+- Anthropic Claude API (AI-powered)
+- Docker SDK (container management)
+- Watchdog (auto-healing)
+
 ## Infrastructure
 
 * Docker & Docker Compose
@@ -64,19 +73,37 @@ Prometheus → Grafana
 
 ✅ Natural language → SQL query conversion
 ✅ Chatbot-style UI
-✅ Query history
-✅ Tabular results
-✅ Graph visualization (Recharts)
+✅ Tabular results display
+✅ Bar chart visualization (Recharts)
 ✅ Loading & error handling
 ✅ Health check endpoint (`/health`)
+✅ Prometheus metrics (`/metrics`)
+✅ Auto-healing watchdog (DevOps Agent)
+✅ AI-powered log analysis
+✅ CI/CD auto-deployment via GitHub Actions
 
 ---
 
 # 🧠 Example Queries
 
-* “Show top trending topics in last 30 days”
-* “Compare article engagement by topic”
-* “Plot daily views trend for AI articles”
+- `trending` → Show top topics by total views
+- `ai` → Show all AI articles
+- `devops` → Show all DevOps articles
+
+---
+
+## 🗄️ Database Schema
+
+Supabase PostgreSQL with `articles` table:
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | int4 | Primary key |
+| title | text | Article title |
+| topic | text | Category (AI, DevOps, etc.) |
+| views | int4 | View count |
+| likes | int4 | Like count |
+| created_at | timestamp | Creation date |
 
 ---
 
@@ -99,6 +126,7 @@ DB_NAME=postgres
 DB_USER=your-user
 DB_PASSWORD=your-password
 DB_PORT=6543
+ANTHROPIC_API_KEY=ANTHROPIC_API_KEY
 ```
 
 ---
@@ -111,8 +139,13 @@ docker-compose up --build
 
 Access:
 
-* Frontend → http://localhost:3000
-* Backend → http://localhost:8000
+| Service | URL |
+|---------|-----|
+| App | http://localhost |
+| Backend API | http://localhost/api/query |
+| DevOps Agent | http://localhost:8001/docs |
+| Prometheus | http://localhost:9090 |
+| Grafana | http://localhost:3002 |
 
 ---
 
@@ -124,6 +157,15 @@ Access:
 * backend
 * prometheus
 * grafana
+
+| Service | Image | Port |
+|---------|-------|------|
+| frontend | custom build | 80 (internal) |
+| backend | custom build | 8000 (internal) |
+| nginx | nginx:alpine | 80 (public) |
+| devops-agent | custom build | 8001 (public) |
+| prometheus | prom/prometheus | 9090 (public) |
+| grafana | grafana/grafana | 3002 (public) |
 
 ### Features
 
@@ -149,7 +191,6 @@ docker-compose up -d --build
 5. Open ports:
 
 * 80 (HTTP)
-* 3000 / 5173 (optional)
 * 9090 (Prometheus)
 * 3001 (Grafana)
 
@@ -168,12 +209,21 @@ docker-compose up -d --build
 server {
     listen 80;
 
-    location / {
-        proxy_pass http://frontend:5173;
+    location /api/ {
+        proxy_pass http://backend:8000/api/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
     }
 
-    location /api {
-        proxy_pass http://backend:8000;
+    location / {
+        proxy_pass http://frontend:80;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+    location /agent/ {
+    proxy_pass http://devops-agent:8001/agent/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
     }
 }
 ```
@@ -262,10 +312,25 @@ Response:
 
 ---
 
+---
+
+# 🤖 DevOps Agent (Bonus Implemented)
+
+A lightweight AI-powered DevOps assistant built as a microservice.
+
+## Capabilities
+
+✅ Restart containers  
+✅ Summarize failed logs  
+✅ Explain CI/CD failures  
+✅ Health diagnostics  
+✅ Deployment debugging  
+
+---
+
 # ⚠️ Known Limitations
 
 * Loki (logging) not implemented
-* DevOps agent not implemented (bonus)
 * MCP logic simplified
 
 ---
@@ -273,9 +338,6 @@ Response:
 # 🚀 Future Improvements
 
 * Add Loki for centralized logging
-* Build DevOps AI Agent
-* Improve NLP → SQL accuracy
-* Add authentication (Supabase Auth)
 
 ---
 

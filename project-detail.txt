@@ -1,0 +1,116 @@
+-- Commands commonly used in this project -- 
+git pull origin main
+sudo docker compose down
+sudo docker compose up -d --build
+sudo docker compose ps 
+
+sudo docker compose logs nginx
+
+sudo ss -tlnp | grep :80
+
+sudo docker system prune -af
+sudo docker compose up -d --build
+
+# Test backend directly
+curl http://localhost:8000/api/query \
+  -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"query": "ai"}'
+
+# Test via nginx
+curl http://localhost:8080/api/query \
+  -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"query": "ai"}'
+
+# Verify new code is inside container
+sudo docker exec supachat-backend-1 cat /app/app.py | grep user
+
+
+
+
+Grafana
+--------
+Step 4 — Add These Panels
+Panel 1 — HTTP Request Rate
+rate(http_requests_total[5m])
+
+Visualization: Time series
+Title: API Request Rate
+
+Panel 2 — Request Latency
+rate(http_request_duration_seconds_sum[5m]) / rate(http_request_duration_seconds_count[5m])
+
+Visualization: Time series
+Title: API Latency
+
+Panel 3 — Total Requests
+http_requests_total
+
+Visualization: Stat
+Title: Total Requests
+
+Panel 4 — Error Rate
+rate(http_requests_total{status=~"4..|5.."}[5m])
+
+Visualization: Time series
+Title: Error Rate
+
+Step 4 — Add These Panels
+Panel 1 — HTTP Request Rate
+rate(http_requests_total[5m])
+
+Visualization: Time series
+Title: API Request Rate
+
+Panel 2 — Request Latency
+rate(http_request_duration_seconds_sum[5m]) / rate(http_request_duration_seconds_count[5m])
+
+Visualization: Time series
+Title: API Latency
+
+Panel 3 — Total Requests
+http_requests_total
+
+Visualization: Stat
+Title: Total Requests
+
+Panel 4 — Error Rate
+rate(http_requests_total{status=~"4..|5.."}[5m])
+
+Panel 5 — CPU Usage (Bonus)
+
+Click "Add" → "Visualization"
+In query box type:
+
+rate(process_cpu_seconds_total[5m]) * 100
+
+Visualization: Time series
+Title: Error Rate
+
+What you can monitor:
+Metric                    What it shows
+Request rate              How many queries per second
+Latency                   How fast backend responds
+Error rate                Failed requests
+CPU/Memory                Container health
+
+
+Prometheus
+----------
+Step 4 — Run Queries in Prometheus
+Click "Graph" tab at top. Then try these queries:
+Query 1 — See all metrics available:
+http_requests_total
+Click "Execute" → shows all request counts
+Query 2 — Request rate per second:
+rate(http_requests_total[5m])
+Query 3 — Average latency:
+rate(http_request_duration_seconds_sum[5m])
+/
+rate(http_request_duration_seconds_count[5m])
+Query 4 — Check backend is up:
+up{job="backend"}
+Returns 1 = UP ✅, 0 = DOWN ❌
+Query 5 — Total requests count:
+http_requests_total
