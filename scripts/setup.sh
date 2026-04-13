@@ -45,6 +45,10 @@ echo "👤 Adding current user to docker group"
 echo "=============================="
 sudo usermod -aG docker $USER
 
+# Fix socket permissions
+sudo chmod 666 /var/run/docker.sock
+
+# Apply group change immediately
 newgrp docker
 
 echo "=============================="
@@ -56,6 +60,9 @@ echo "=============================="
 echo "✅ Docker Compose Version:"
 echo "=============================="
 docker compose version || true
+
+
+
 
 echo "=============================="
 echo "🎉 Setup completed!"
