@@ -6,6 +6,9 @@ import anthropic
 import os
 from dotenv import load_dotenv
 
+import threading
+import time
+
 load_dotenv()
 
 app = FastAPI(title="SupaChat DevOps Agent")
@@ -302,4 +305,71 @@ def chat_with_agent(req: ChatRequest):
     return {
         "user_message": req.message,
         "agent_response": response
+    }
+
+
+# =========================
+# WATCHDOG — Auto Healer
+# =========================
+
+CRITICAL_CONTAINERS = [
+    "supachat-frontend-1",
+    "supachat-backend-1",
+    "supachat-nginx-1"
+]
+
+def watchdog():
+    """Monitors containers and auto-restarts if down"""
+    print("🐕 Watchdog started — monitoring containers...")
+    
+    while True:
+        try:
+            for container in CRITICAL_CONTAINERS:
+                # Check if container is running
+                result = run_command(
+                    f"docker inspect -f '{{{{.State.Running}}}}' {container} 2>&1"
+                )
+                
+                if "true" not in result:
+                    print(f"🚨 {container} is DOWN! Restarting...")
+                    
+                    # Try to restart
+                    restart = run_command(f"docker compose -f /home/ubuntu/supachat/docker-compose.yml up -d {container.replace('supachat-', '').replace('-1', '')}")
+                    
+                    print(f"✅ Restart attempted for {container}: {restart}")
+                else:
+                    print(f"✅ {container} is healthy")
+                    
+        except Exception as e:
+            print(f"❌ Watchdog error: {e}")
+        
+        # Check every 30 seconds
+        time.sleep(30)
+
+# Start watchdog in background when app starts
+@app.on_event("startup")
+async def start_watchdog():
+    thread = threading.Thread(target=watchdog, daemon=True)
+    thread.start()
+    print("🐕 Watchdog thread started!")
+
+# =========================
+# WATCHDOG STATUS ENDPOINT
+# =========================
+
+@app.get("/agent/watchdog")
+def watchdog_status():
+    """Check what watchdog is monitoring"""
+    statuses = {}
+    
+    for container in CRITICAL_CONTAINERS:
+        result = run_command(
+            f"docker inspect -f '{{{{.State.Running}}}}' {container} 2>&1"
+        )
+        statuses[container] = "✅ Running" if "true" in result else "❌ Down"
+    
+    return {
+        "monitored_containers": statuses,
+        "check_interval": "30 seconds",
+        "auto_restart": "enabled"
     }

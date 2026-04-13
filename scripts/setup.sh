@@ -45,6 +45,8 @@ echo "👤 Adding current user to docker group"
 echo "=============================="
 sudo usermod -aG docker $USER
 
+newgrp docker
+
 echo "=============================="
 echo "✅ Docker Version:"
 echo "=============================="
