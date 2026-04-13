@@ -42,3 +42,15 @@ services:
     container_name: grafana
     ports:
       - "3002:3000"
+
+  devops-agent:
+    build: ./devops-agent
+    ports:
+      - "8001:8001"
+    env_file:
+      - .env
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock  # ← allows agent to control Docker
+    depends_on:
+      - backend
+      - frontend
