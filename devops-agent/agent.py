@@ -334,8 +334,9 @@ def watchdog():
                     print(f"🚨 {container} is DOWN! Restarting...")
                     
                     # Try to restart
-                    restart = run_command(f"docker compose -f /home/ubuntu/supachat/docker-compose.yml up -d {container.replace('supachat-', '').replace('-1', '')}")
-                    
+                    # restart = run_command(f"docker compose -f /home/ubuntu/supachat/docker-compose.yml up -d {container.replace('supachat-', '').replace('-1', '')}")
+                    # ✅ Fix — correct command
+                    restart = run_command(f"cd /home/ubuntu/supachat && docker compose up -d --no-deps {container.replace('supachat-', '').replace('-1', '')}")
                     print(f"✅ Restart attempted for {container}: {restart}")
                 else:
                     print(f"✅ {container} is healthy")
