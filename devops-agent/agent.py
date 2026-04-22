@@ -158,14 +158,38 @@ def health():
 # 1. CONTAINER STATUS
 # =========================
 
+# @app.get("/agent/status")
+# def get_status():
+#     output = run_command("docker ps -a --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'")
+#     summary = ask_ai(
+#         "You are a DevOps assistant. Analyze Docker container status.",
+#         f"Docker ps output:\n{output}\n\nGive a brief health summary. List any containers that are down."
+#     )
+#     return {"raw_output": output, "ai_summary": summary}
+
+# Clean & understandable output
+
 @app.get("/agent/status")
 def get_status():
     output = run_command("docker ps -a --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'")
+    
     summary = ask_ai(
-        "You are a DevOps assistant. Analyze Docker container status.",
-        f"Docker ps output:\n{output}\n\nGive a brief health summary. List any containers that are down."
+        "You are a DevOps assistant. Be concise and use emojis.",
+        f"""Docker container status:
+{output}
+
+Reply in this exact format:
+Total Containers: X
+✅ Running: list them
+❌ Down: list them or 'None'
+⚠️  Action needed: yes/no and what
+Overall Health: Healthy/Unhealthy"""
     )
-    return {"raw_output": output, "ai_summary": summary}
+    
+    return {
+        "status": output,
+        "summary": summary
+    }
 
 # =========================
 # 2. CONTAINER LOGS
