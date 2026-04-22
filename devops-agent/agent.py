@@ -54,7 +54,8 @@ def ask_ai(system: str, prompt: str) -> str:
     try:
         client = Groq(api_key=os.getenv("GROQ_API_KEY"))
         response = client.chat.completions.create(
-            model="llama3-8b-8192",   # free model
+            # model="llama3-8b-8192",   # free model
+            model="llama-3.3-70b-versatile",
             messages=[
                 {"role": "system", "content": system},
                 {"role": "user", "content": prompt}
