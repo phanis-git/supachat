@@ -7,6 +7,7 @@ from contextlib import asynccontextmanager
 from pydantic import BaseModel
 import subprocess
 import anthropic
+from groq import Groq
 import os
 import threading
 import time
@@ -29,16 +30,38 @@ def run_command(cmd: str) -> str:
         return result.stdout + result.stderr
     except Exception as e:
         return f"Error running command: {str(e)}"
+    
+# Here we use anthropic ai which is cost .. so we can try free ai tool 
+
+# def ask_ai(system: str, prompt: str) -> str:
+#     try:
+#         client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+#         response = client.messages.create(
+#             model="claude-opus-4-5",
+#             max_tokens=1024,
+#             messages=[{"role": "user", "content": f"System context: {system}\n\nQuestion: {prompt}"}]
+#         )
+#         return response.content[0].text
+#     except Exception as e:
+#         return f"AI Error: {str(e)}"
+
+
+
+# Here i use grokai for free
 
 def ask_ai(system: str, prompt: str) -> str:
+    """Ask Groq AI a question — FREE!"""
     try:
-        client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
-        response = client.messages.create(
-            model="claude-opus-4-5",
-            max_tokens=1024,
-            messages=[{"role": "user", "content": f"System context: {system}\n\nQuestion: {prompt}"}]
+        client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+        response = client.chat.completions.create(
+            model="llama3-8b-8192",   # free model
+            messages=[
+                {"role": "system", "content": system},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=1024
         )
-        return response.content[0].text
+        return response.choices[0].message.content
     except Exception as e:
         return f"AI Error: {str(e)}"
 
