@@ -61,6 +61,7 @@ services:
       - .env
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock  # ← allows agent to control Docker
+      - /home/ubuntu/supachat:/home/ubuntu/supachat
     depends_on:
       - backend
       - frontend

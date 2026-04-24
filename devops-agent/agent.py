@@ -71,9 +71,9 @@ def ask_ai(system: str, prompt: str) -> str:
 # =========================
 
 CRITICAL_CONTAINERS = {
-    "supachat-frontend-1": "frontend",
-    "supachat-backend-1": "backend",
-    "supachat-nginx-1": "nginx"
+   "frontend": "frontend",
+    "backend": "backend",
+    "nginx": "nginx"
 }
 
 COMPOSE_PATH = "/home/ubuntu/supachat"
@@ -158,17 +158,6 @@ def health():
 # 1. CONTAINER STATUS
 # =========================
 
-# @app.get("/agent/status")
-# def get_status():
-#     output = run_command("docker ps -a --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'")
-#     summary = ask_ai(
-#         "You are a DevOps assistant. Analyze Docker container status.",
-#         f"Docker ps output:\n{output}\n\nGive a brief health summary. List any containers that are down."
-#     )
-#     return {"raw_output": output, "ai_summary": summary}
-
-
-
 # Clean & understandable output
 
 @app.get("/agent/status")
@@ -196,17 +185,6 @@ Overall Health: Healthy/Unhealthy"""
 # =========================
 # 2. CONTAINER LOGS
 # =========================
-
-# @app.get("/agent/logs/{container_name}")
-# def get_logs(container_name: str, lines: int = 50):
-#     output = run_command(f"docker logs {container_name} --tail {lines} 2>&1")
-#     summary = ask_ai(
-#         "You are a DevOps assistant. Analyze Docker logs.",
-#         f"Logs from {container_name}:\n{output}\n\nSummarize. Highlight errors."
-#     )
-#     return {"container": container_name, "raw_logs": output, "ai_summary": summary}
-
-
 
 # Cleaner logs endpoint
 @app.get("/agent/logs/{container_name}")
@@ -265,41 +243,6 @@ def diagnose(req: DiagnoseRequest):
     }
 
 
-
-#     containers = run_command("docker ps -a --format 'table {{.Names}}\t{{.Status}}'")
-#     disk = run_command("df -h / | tail -1")
-#     memory = run_command("free -h | grep Mem")
-#     cpu = run_command("top -bn1 | grep 'Cpu(s)'")
-#     backend_health = run_command("curl -s http://localhost:8000/health")
-    
-#     summary = ask_ai(
-#         "You are a DevOps engineer. Be concise.",
-#         f"""System diagnostic:
-# Containers: {containers}
-# Disk: {disk}
-# Memory: {memory}
-# CPU: {cpu}
-# Backend: {backend_health}
-
-# Reply in this format:
-# Health Score: X/10
-# ✅ Good: (list)
-# ⚠️  Warnings: (list or None)
-# ❌ Issues: (list or None)
-# Recommended Actions: (list or None)"""
-#     )
-    
-#     return {
-#         "containers": containers,
-#         "disk": disk,
-#         "memory": memory,
-#         "cpu": cpu,
-#         "backend": backend_health,
-#         "health_report": summary
-#     }
-
-
-
 # =========================
 # 5. ERROR LOGS
 # =========================
@@ -325,7 +268,9 @@ def deploy():
     results["git_pull"] = run_command(f"cd {COMPOSE_PATH} && git fetch origin && git reset --hard origin/main")
     results["compose_down"] = run_command(f"cd {COMPOSE_PATH} && docker compose down")
     results["compose_up"] = run_command(f"cd {COMPOSE_PATH} && docker compose up -d --build 2>&1")
-    results["final_status"] = run_command("docker ps --format 'table {{.Names}}\t{{.Status}}'")
+    # results["final_status"] = run_command("docker ps --format 'table {{.Names}}\t{{.Status}}'")
+    results["final_status"] = run_command("docker ps --format '{{.Names}}'")
+
     summary = ask_ai(
         "You are a DevOps assistant.",
         f"Deployment results:\n{results}\n\nWas deployment successful? Any issues?"
@@ -335,23 +280,6 @@ def deploy():
 # =========================
 # 7. FULL DIAGNOSTIC
 # =========================
-
-# @app.get("/agent/diagnostic")
-# def full_diagnostic():
-#     diagnostic = {}
-#     diagnostic["containers"] = run_command("docker ps -a --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'")
-#     diagnostic["disk_usage"] = run_command("df -h /")
-#     diagnostic["memory_usage"] = run_command("free -h")
-#     diagnostic["cpu_usage"] = run_command("top -bn1 | grep 'Cpu(s)'")
-#     diagnostic["backend_health"] = run_command("curl -s http://localhost:8000/health")
-#     diagnostic["nginx_status"] = run_command("docker logs supachat-nginx-1 --tail 5 2>&1")
-#     diagnostic["backend_errors"] = run_command("docker logs supachat-backend-1 2>&1 | grep -i error | tail -5")
-#     analysis = ask_ai(
-#         "You are a senior DevOps engineer.",
-#         f"System diagnostic:\n{diagnostic}\n\nFull health report. Rate 1-10. List issues and actions."
-#     )
-#     return {"diagnostic_data": diagnostic, "ai_health_report": analysis}
-
 
 # Cleaner diagnostic endpoint
 @app.get("/agent/diagnostic")
@@ -392,15 +320,6 @@ Recommended Actions: (list or None)"""
 # =========================
 # 8. CHAT
 # =========================
-
-# @app.post("/agent/chat")
-# def chat_with_agent(req: ChatRequest):
-#     containers = run_command("docker ps -a --format '{{.Names}}: {{.Status}}'")
-#     response = ask_ai(
-#         f"You are a DevOps agent for SupaChat. Containers: {containers}. Help with issues, fixes, logs, best practices.",
-#         req.message
-#     )
-#     return {"user_message": req.message, "agent_response": response}
 
 # Cleaner chat endpoint
 @app.post("/agent/chat")
