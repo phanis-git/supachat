@@ -689,16 +689,24 @@ def ask_ai(system: str, prompt: str) -> str:
 
 def get_container_state(container_name: str) -> str:
     code, out, err = run_command(
+        f"docker inspect {container_name}"
+    )
+
+    output = (out + err).lower()
+
+    if "no such object" in output or "no such container" in output:
+        return "missing"
+
+    # Now get actual status safely
+    code, out, err = run_command(
         f"docker inspect -f '{{{{.State.Status}}}}' {container_name}"
     )
 
-    output = out + err
+    state = out.strip()
 
-    if "No such object" in output:
-        return "missing"
-    elif "running" in output:
+    if state == "running":
         return "running"
-    elif "exited" in output or "created" in output:
+    elif state in ["exited", "created"]:
         return "stopped"
     else:
         return "unknown"
@@ -708,37 +716,106 @@ def get_container_state(container_name: str) -> str:
 # AUTO HEAL
 # =========================
 
+# def auto_heal(container_name: str, service_name: str):
+#     state = get_container_state(container_name)
+
+#     if state == "running":
+#         print(f"✅ {container_name} healthy")
+
+#     elif state == "stopped":
+#         print(f"⚠️ {container_name} stopped — restarting...")
+#         code, out, err = run_command(f"docker start {container_name}")
+#         if code == 0:
+#             print(f"🔁 Restarted {container_name}")
+#         else:
+#             print(f"❌ Restart failed: {err}")
+
+#     elif state == "missing":
+#         print(f"🚨 {container_name} missing — recreating...")
+
+#         # 🔥 FIXED COMMAND (NO keyword arg, proper compose usage)
+#         cmd = f"cd {COMPOSE_PATH} && docker compose up -d {service_name}"
+#         code, out, err = run_command(cmd)
+
+#         print("STDOUT:", out)
+#         print("STDERR:", err)
+
+#         if code == 0:
+#             print(f"🛠️ Recreated {container_name}")
+#         else:
+#             print(f"❌ Recreate failed: {err}")
+
+#     else:
+#         print(f"❓ Unknown state: {container_name}")
+
+
 def auto_heal(container_name: str, service_name: str):
     state = get_container_state(container_name)
 
+    print(f"🔍 {container_name} state: {state}")
+
+    # =========================
+    # HEALTHY
+    # =========================
     if state == "running":
         print(f"✅ {container_name} healthy")
+        return
 
-    elif state == "stopped":
+    # =========================
+    # STOPPED → restart
+    # =========================
+    if state == "stopped":
         print(f"⚠️ {container_name} stopped — restarting...")
+
         code, out, err = run_command(f"docker start {container_name}")
-        if code == 0:
-            print(f"🔁 Restarted {container_name}")
-        else:
-            print(f"❌ Restart failed: {err}")
-
-    elif state == "missing":
-        print(f"🚨 {container_name} missing — recreating...")
-
-        # 🔥 FIXED COMMAND (NO keyword arg, proper compose usage)
-        cmd = f"cd {COMPOSE_PATH} && docker compose up -d {service_name}"
-        code, out, err = run_command(cmd)
 
         print("STDOUT:", out)
         print("STDERR:", err)
 
         if code == 0:
-            print(f"🛠️ Recreated {container_name}")
+            print(f"🔁 Restarted {container_name}")
         else:
-            print(f"❌ Recreate failed: {err}")
+            print(f"❌ Restart failed: {err}")
 
-    else:
-        print(f"❓ Unknown state: {container_name}")
+        return
+
+    # =========================
+    # MISSING / UNKNOWN → recreate
+    # =========================
+    if state in ["missing", "unknown"]:
+        print(f"🚨 {container_name} not found — recreating...")
+
+        cmd = f"cd {COMPOSE_PATH} && docker compose up -d {service_name}"
+        print(f"⚙️ Running: {cmd}")
+
+        code, out, err = run_command(cmd)
+
+        print("STDOUT:", out)
+        print("STDERR:", err)
+
+        if code != 0:
+            print(f"❌ Recreate failed: {err}")
+            return
+
+        # =========================
+        # VERIFY AFTER RECREATE
+        # =========================
+        time.sleep(3)
+
+        new_state = get_container_state(container_name)
+        print(f"🔄 {container_name} new state: {new_state}")
+
+        if new_state == "running":
+            print(f"🛠️ Successfully recreated {container_name}")
+        else:
+            print(f"❌ Recreate did not succeed. Current state: {new_state}")
+
+        return
+
+    # =========================
+    # FALLBACK
+    # =========================
+    print(f"❓ Unknown state encountered for {container_name}: {state}")
 
 
 # =========================
