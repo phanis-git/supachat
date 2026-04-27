@@ -3,6 +3,7 @@ version: "3"
 services:
   backend:
     build: ./backend
+    image: supachat-backend:latest
     container_name: backend
     expose:
       - "8000"
@@ -15,6 +16,7 @@ services:
 
   frontend:
     build: ./frontend
+    image: supachat-frontend:latest
     container_name: frontend
     expose:
       - "80"
