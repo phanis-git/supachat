@@ -360,6 +360,269 @@
 
 # 2
 
+# from fastapi import FastAPI
+# from fastapi.middleware.cors import CORSMiddleware
+# from contextlib import asynccontextmanager
+# from pydantic import BaseModel
+# import subprocess
+# from groq import Groq
+# import os
+# import threading
+# import time
+# from dotenv import load_dotenv
+
+# load_dotenv()
+
+# # =========================
+# # CONFIG
+# # =========================
+
+# CRITICAL_CONTAINERS = {
+#     "frontend": "frontend",
+#     "backend": "backend",
+#     "nginx": "nginx"
+# }
+
+# COMPOSE_PATH = "/home/ubuntu/supachat"
+# CHECK_INTERVAL = 15
+
+# # =========================
+# # HELPER FUNCTIONS
+# # =========================
+
+# def run_command(cmd: str) -> tuple:
+#     try:
+#         result = subprocess.run(
+#             cmd,
+#             shell=True,
+#             capture_output=True,
+#             text=True,
+#             timeout=60
+#         )
+#         return result.returncode, result.stdout.strip(), result.stderr.strip()
+#     except Exception as e:
+#         return 1, "", str(e)
+
+# def ask_ai(system: str, prompt: str) -> str:
+#     try:
+#         client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+#         response = client.chat.completions.create(
+#             model="llama-3.3-70b-versatile",
+#             messages=[
+#                 {"role": "system", "content": system},
+#                 {"role": "user", "content": prompt}
+#             ],
+#             max_tokens=512
+#         )
+#         return response.choices[0].message.content
+#     except Exception as e:
+#         return f"AI Error: {str(e)}"
+
+# # =========================
+# # CONTAINER STATE DETECTION
+# # =========================
+
+# def get_container_state(container_name: str) -> str:
+#     code, out, err = run_command(
+#         f"docker inspect -f '{{{{.State.Status}}}}' {container_name}"
+#     )
+
+#     output = out + err
+
+#     if "No such object" in output:
+#         return "missing"
+#     elif "running" in output:
+#         return "running"
+#     elif "exited" in output or "created" in output:
+#         return "stopped"
+#     else:
+#         return "unknown"
+
+# # =========================
+# # AUTO-HEAL ENGINE
+# # =========================
+
+# def auto_heal(container_name: str, service_name: str):
+#     state = get_container_state(container_name)
+
+#     if state == "running":
+#         print(f"✅ {container_name} healthy")
+
+#     elif state == "stopped":
+#         print(f"⚠️ {container_name} stopped — restarting...")
+#         code, out, err = run_command(f"docker start {container_name}")
+#         if code == 0:
+#             print(f"🔁 Restarted {container_name}")
+#         else:
+#             print(f"❌ Restart failed: {err}")
+
+#     # elif state == "missing":
+#     #     print(f"🚨 {container_name} missing — recreating...")
+#     #     code, out, err = run_command(
+#     #         # f"cd {COMPOSE_PATH} && docker compose up -d {service_name}"
+#     #         f"cd {COMPOSE_PATH} && docker-compose up -d --build {service_name}"
+#     #     )
+#     #     if code == 0:
+#     #         print(f"🛠️ Recreated {container_name}")
+#     #     else:
+#     #         print(f"❌ Recreate failed: {err}")
+
+#     # else:
+#     #     print(f"❓ Unknown state for {container_name}")
+
+#     elif state == "missing":
+#         print(f"🚨 {container_name} missing — recreating...")
+
+#         code, out, err = run_command(
+#             # f"cd {COMPOSE_PATH} && docker-compose up -d --build {service_name}"
+#             # f"cd {COMPOSE_PATH} && docker compose up -d --build {service_name}"
+#             cmd = f"cd {COMPOSE_PATH} && docker compose up -d {service_name}"
+#         )
+
+#         print("STDOUT:", out)
+#         print("STDERR:", err)
+
+#         if code == 0:
+#             print(f"🛠️ Recreated {container_name}")
+#         else:
+#             print(f"❌ Recreate failed")
+
+# # =========================
+# # WATCHDOG THREAD
+# # =========================
+
+# def watchdog():
+#     print("🐕 Watchdog started...")
+#     while True:
+#         for container, service in CRITICAL_CONTAINERS.items():
+#             try:
+#                 auto_heal(container, service)
+#             except Exception as e:
+#                 print(f"❌ Watchdog error: {e}")
+#         time.sleep(CHECK_INTERVAL)
+
+# # =========================
+# # FASTAPI LIFESPAN
+# # =========================
+
+# # @asynccontextmanager
+# # async def lifespan(app: FastAPI):
+# #     print("🚀 Starting DevOps Agent...")
+# #     thread = threading.Thread(target=watchdog, daemon=True)
+# #     thread.start()
+# #     yield
+# #     print("🛑 Stopping Agent...")
+
+# # app = FastAPI(title="SupaChat DevOps Agent", lifespan=lifespan)
+# app = FastAPI(title="SupaChat DevOps Agent")
+
+# @app.on_event("startup")
+# def start_watchdog():
+#     print("🚀 Starting DevOps Agent...")
+
+#     thread = threading.Thread(target=watchdog, daemon=True)
+#     thread.start()
+
+#     print("🐕 Watchdog thread started!")
+
+# # =========================
+# # APP INIT
+# # =========================
+
+
+
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=["*"],
+#     allow_credentials=True,
+#     allow_methods=["*"],
+#     allow_headers=["*"],
+# )
+
+# # =========================
+# # MODELS
+# # =========================
+
+# class ChatRequest(BaseModel):
+#     message: str
+
+# # =========================
+# # ENDPOINTS
+# # =========================
+
+# @app.get("/health")
+# def health():
+#     return {"status": "ok"}
+
+# @app.get("/agent/status")
+# def status():
+#     code, out, err = run_command("docker ps -a --format '{{.Names}}: {{.Status}}'")
+#     summary = ask_ai(
+#         "You are a DevOps assistant",
+#         f"Containers:\n{out}\nSummarize health."
+#     )
+#     return {"containers": out, "summary": summary}
+
+# @app.get("/agent/watchdog")
+# def watchdog_status():
+#     result = {}
+#     for c, s in CRITICAL_CONTAINERS.items():
+#         state = get_container_state(c)
+#         result[c] = {
+#             "state": state,
+#             "auto_heal": True
+#         }
+#     return {
+#         "watchdog": "active",
+#         "interval": CHECK_INTERVAL,
+#         "containers": result
+#     }
+
+# @app.post("/agent/restart/{container}")
+# def restart(container: str):
+#     code, out, err = run_command(f"docker restart {container}")
+#     return {"output": out, "error": err, "success": code == 0}
+
+# @app.post("/agent/chat")
+# def chat(req: ChatRequest):
+#     code, containers, _ = run_command("docker ps -a --format '{{.Names}}: {{.Status}}'")
+#     response = ask_ai(
+#         f"Containers: {containers}",
+#         req.message
+#     )
+#     return {"response": response}
+
+# @app.get("/agent/diagnostic")
+# def diagnostic():
+#     _, containers, _ = run_command("docker ps -a --format '{{.Names}} {{.Status}}'")
+#     _, disk, _ = run_command("df -h / | tail -1")
+#     _, memory, _ = run_command("free -h | grep Mem")
+#     _, cpu, _ = run_command("top -bn1 | grep 'Cpu(s)'")
+
+#     summary = ask_ai(
+#         "You are a DevOps engineer",
+#         f"""
+# Containers: {containers}
+# Disk: {disk}
+# Memory: {memory}
+# CPU: {cpu}
+
+# Give health report.
+# """
+#     )
+
+#     return {
+#         "containers": containers,
+#         "disk": disk,
+#         "memory": memory,
+#         "cpu": cpu,
+#         "summary": summary
+#     }
+
+
+
+# 3
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
@@ -390,7 +653,7 @@ CHECK_INTERVAL = 15
 # HELPER FUNCTIONS
 # =========================
 
-def run_command(cmd: str) -> tuple:
+def run_command(cmd: str):
     try:
         result = subprocess.run(
             cmd,
@@ -402,6 +665,7 @@ def run_command(cmd: str) -> tuple:
         return result.returncode, result.stdout.strip(), result.stderr.strip()
     except Exception as e:
         return 1, "", str(e)
+
 
 def ask_ai(system: str, prompt: str) -> str:
     try:
@@ -418,8 +682,9 @@ def ask_ai(system: str, prompt: str) -> str:
     except Exception as e:
         return f"AI Error: {str(e)}"
 
+
 # =========================
-# CONTAINER STATE DETECTION
+# CONTAINER STATE
 # =========================
 
 def get_container_state(container_name: str) -> str:
@@ -438,8 +703,9 @@ def get_container_state(container_name: str) -> str:
     else:
         return "unknown"
 
+
 # =========================
-# AUTO-HEAL ENGINE
+# AUTO HEAL
 # =========================
 
 def auto_heal(container_name: str, service_name: str):
@@ -456,27 +722,12 @@ def auto_heal(container_name: str, service_name: str):
         else:
             print(f"❌ Restart failed: {err}")
 
-    # elif state == "missing":
-    #     print(f"🚨 {container_name} missing — recreating...")
-    #     code, out, err = run_command(
-    #         # f"cd {COMPOSE_PATH} && docker compose up -d {service_name}"
-    #         f"cd {COMPOSE_PATH} && docker-compose up -d --build {service_name}"
-    #     )
-    #     if code == 0:
-    #         print(f"🛠️ Recreated {container_name}")
-    #     else:
-    #         print(f"❌ Recreate failed: {err}")
-
-    # else:
-    #     print(f"❓ Unknown state for {container_name}")
-
     elif state == "missing":
         print(f"🚨 {container_name} missing — recreating...")
 
-        code, out, err = run_command(
-            # f"cd {COMPOSE_PATH} && docker-compose up -d --build {service_name}"
-            f"cd {COMPOSE_PATH} && docker compose up -d --build {service_name}"
-        )
+        # 🔥 FIXED COMMAND (NO keyword arg, proper compose usage)
+        cmd = f"cd {COMPOSE_PATH} && docker compose up -d {service_name}"
+        code, out, err = run_command(cmd)
 
         print("STDOUT:", out)
         print("STDERR:", err)
@@ -484,10 +735,14 @@ def auto_heal(container_name: str, service_name: str):
         if code == 0:
             print(f"🛠️ Recreated {container_name}")
         else:
-            print(f"❌ Recreate failed")
+            print(f"❌ Recreate failed: {err}")
+
+    else:
+        print(f"❓ Unknown state: {container_name}")
+
 
 # =========================
-# WATCHDOG THREAD
+# WATCHDOG
 # =========================
 
 def watchdog():
@@ -500,20 +755,13 @@ def watchdog():
                 print(f"❌ Watchdog error: {e}")
         time.sleep(CHECK_INTERVAL)
 
+
 # =========================
-# FASTAPI LIFESPAN
+# LIFESPAN (FIXED)
 # =========================
 
-# @asynccontextmanager
-# async def lifespan(app: FastAPI):
-#     print("🚀 Starting DevOps Agent...")
-#     thread = threading.Thread(target=watchdog, daemon=True)
-#     thread.start()
-#     yield
-#     print("🛑 Stopping Agent...")
-
-@app.on_event("startup")
-def start_watchdog():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     print("🚀 Starting DevOps Agent...")
 
     thread = threading.Thread(target=watchdog, daemon=True)
@@ -521,12 +769,16 @@ def start_watchdog():
 
     print("🐕 Watchdog thread started!")
 
-# =========================
-# APP INIT
-# =========================
+    yield
 
-# app = FastAPI(title="SupaChat DevOps Agent", lifespan=lifespan)
-app = FastAPI(title="SupaChat DevOps Agent")
+    print("🛑 Stopping Agent...")
+
+
+app = FastAPI(title="SupaChat DevOps Agent", lifespan=lifespan)
+
+# =========================
+# MIDDLEWARE
+# =========================
 
 app.add_middleware(
     CORSMiddleware,
@@ -551,6 +803,7 @@ class ChatRequest(BaseModel):
 def health():
     return {"status": "ok"}
 
+
 @app.get("/agent/status")
 def status():
     code, out, err = run_command("docker ps -a --format '{{.Names}}: {{.Status}}'")
@@ -559,6 +812,7 @@ def status():
         f"Containers:\n{out}\nSummarize health."
     )
     return {"containers": out, "summary": summary}
+
 
 @app.get("/agent/watchdog")
 def watchdog_status():
@@ -575,19 +829,22 @@ def watchdog_status():
         "containers": result
     }
 
+
 @app.post("/agent/restart/{container}")
 def restart(container: str):
     code, out, err = run_command(f"docker restart {container}")
     return {"output": out, "error": err, "success": code == 0}
 
+
 @app.post("/agent/chat")
 def chat(req: ChatRequest):
-    code, containers, _ = run_command("docker ps -a --format '{{.Names}}: {{.Status}}'")
+    _, containers, _ = run_command("docker ps -a --format '{{.Names}}: {{.Status}}'")
     response = ask_ai(
         f"Containers: {containers}",
         req.message
     )
     return {"response": response}
+
 
 @app.get("/agent/diagnostic")
 def diagnostic():
