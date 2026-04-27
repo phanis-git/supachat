@@ -474,7 +474,8 @@ def auto_heal(container_name: str, service_name: str):
         print(f"🚨 {container_name} missing — recreating...")
 
         code, out, err = run_command(
-            f"cd {COMPOSE_PATH} && docker-compose up -d --build {service_name}"
+            # f"cd {COMPOSE_PATH} && docker-compose up -d --build {service_name}"
+            f"cd {COMPOSE_PATH} && docker compose up -d --build {service_name}"
         )
 
         print("STDOUT:", out)
@@ -503,19 +504,29 @@ def watchdog():
 # FASTAPI LIFESPAN
 # =========================
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
+# @asynccontextmanager
+# async def lifespan(app: FastAPI):
+#     print("🚀 Starting DevOps Agent...")
+#     thread = threading.Thread(target=watchdog, daemon=True)
+#     thread.start()
+#     yield
+#     print("🛑 Stopping Agent...")
+
+@app.on_event("startup")
+def start_watchdog():
     print("🚀 Starting DevOps Agent...")
+
     thread = threading.Thread(target=watchdog, daemon=True)
     thread.start()
-    yield
-    print("🛑 Stopping Agent...")
+
+    print("🐕 Watchdog thread started!")
 
 # =========================
 # APP INIT
 # =========================
 
-app = FastAPI(title="SupaChat DevOps Agent", lifespan=lifespan)
+# app = FastAPI(title="SupaChat DevOps Agent", lifespan=lifespan)
+app = FastAPI(title="SupaChat DevOps Agent")
 
 app.add_middleware(
     CORSMiddleware,
